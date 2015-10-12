@@ -87,19 +87,391 @@ namespace cef2048Wrapper
 
         private void serialReceiveHandler(object sender, SerialDataReceivedEventArgs e)
         {
-            SerialPort sp = (SerialPort)sender;
-            string indata = sp.ReadExisting();
-            receivedData += indata;
+            this.Invoke((Action<object>)((obj) =>
+            {
+                SerialPort sp = (SerialPort)sender;
+                string indata = sp.ReadExisting();
+                receivedData += indata;
+            }), new Object());
         }
 
         private void consoleReceiveHandler(object sender, ConsoleMessageEventArgs e)
         {
             this.Invoke((Action<object>)((obj) =>
             {
-                browserConsole.AppendText(e.Message + "\n");
+                if (char.IsNumber(e.Message[0]))
+                {
+                    browserConsole.AppendText(e.Message + "\n");
+                    startSearch(e.Message.Trim());
+                }
             }), new Object());
         }
 
+        private void startSearch(String cells)
+        {
+
+        }
+
+        private int[,] cellsStrToBoard(String cells)
+        {
+            int[] cellsSeq = cells.Split(' ').Select(elm => int.Parse(elm)).ToArray<int>();
+            //map every cell (log 2)
+            for(var i = 0; i < 16; i++)
+            {
+                if(cellsSeq[i] == 0)
+                {
+                    continue;
+                }
+                var cnt = 0;
+                while(cellsSeq[i] != 1)
+                {
+                    cellsSeq[i] /= 2;
+                    cnt += 1;
+                }
+                cellsSeq[i] = cnt;
+            }
+            int[,] board = new int[4,4];
+            for(var i = 0; i < 16; i++)
+            {
+                board[i / 4, 4 - i % 4] = cellsSeq[i];
+            }
+            return board;
+        }
+
+        private Tuple<int[], bool> lineMovable(int x0, int x1, int x2, int x3)
+        {
+            int y0 = 5, y1 = 5, y2 = 5, y3 = 5;
+            bool movable = false;
+            if (x0 == 0 && x1 == 0 && x2 == 0 && x3 == 0)
+            {
+                y0 = 0;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = false;
+            }
+            else if (x0 == 0 && x1 == 0 && x2 == 0 && x3 != 0)
+            {
+                y0 = x3;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 == 0 && x2 != 0 && x3 == 0)
+            {
+                y0 = x2;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 == 0 && x3 == 0)
+            {
+                y0 = x1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 == 0 && x3 == 0)
+            {
+                y0 = x0;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = false;
+            }
+            else if (x0 == 0 && x1 == 0 && x2 != 0 && x3 != 0 && x2 != x3)
+            {
+                y0 = x2;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 == 0 && x3 != 0 && x1 != x3)
+            {
+                y0 = x1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 == 0 && x3 != 0 && x0 != x3)
+            {
+                y0 = x0;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 == 0 && x1 != x2)
+            {
+                y0 = x1;
+                y1 = x2;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 == 0 && x0 != x2)
+            {
+                y0 = x0;
+                y1 = x2;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 == 0 && x0 != x1)
+            {
+                y0 = x0;
+                y1 = x1;
+                y2 = 0;
+                y3 = 0;
+                movable = false;
+            }
+            else if (x0 == 0 && x1 == 0 && x2 != 0 && x3 != 0 && x2 == x3)
+            {
+                y0 = x2 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 == 0 && x3 != 0 && x1 == x3)
+            {
+                y0 = x1 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 == 0 && x3 != 0 && x0 == x3)
+            {
+                y0 = x0 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 == 0 && x1 == x2)
+            {
+                y0 = x1 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 == 0 && x0 == x2)
+            {
+                y0 = x0 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 == 0 && x0 == x1)
+            {
+                y0 = x0 + 1;
+                y1 = 0;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 != 0 && x1 != x2 && x2 != x3)
+            {
+                y0 = x1;
+                y1 = x2;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 != 0 && x0 != x2 && x2 != x3)
+            {
+                y0 = x0;
+                y1 = x2;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 != 0 && x0 != x1 && x1 != x3)
+            {
+                y0 = x0;
+                y1 = x1;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 == 0 && x0 != x1 && x1 != x2)
+            {
+                y0 = x0;
+                y1 = x1;
+                y2 = x2;
+                y3 = 0;
+                movable = false;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 != 0 && x1 == x2 && x2 != x3)
+            {
+                y0 = x1 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 != 0 && x0 == x2 && x2 != x3)
+            {
+                y0 = x0 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 != 0 && x0 == x1 && x1 != x3)
+            {
+                y0 = x0 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 == 0 && x0 == x1 && x1 != x2)
+            {
+                y0 = x0 + 1;
+                y1 = x2;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 != 0 && x1 != x2 && x2 == x3)
+            {
+                y0 = x1;
+                y1 = x2 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 != 0 && x0 != x2 && x2 == x3)
+            {
+                y0 = x0;
+                y1 = x2 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 != 0 && x0 != x1 && x1 == x3)
+            {
+                y0 = x0;
+                y1 = x1 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 == 0 && x0 != x1 && x1 == x2)
+            {
+                y0 = x0;
+                y1 = x1 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 == 0 && x1 != 0 && x2 != 0 && x3 != 0 && x1 == x2 && x2 == x3)
+            {
+                y0 = x1 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 == 0 && x2 != 0 && x3 != 0 && x0 == x2 && x2 == x3)
+            {
+                y0 = x0 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 == 0 && x3 != 0 && x0 == x1 && x1 == x3)
+            {
+                y0 = x0 + 1;
+                y1 = x3;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 == 0 && x0 == x1 && x1 == x2)
+            {
+                y0 = x0 + 1;
+                y1 = x2;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 != x1 && x1 != x2 && x2 != x3)
+            {
+                y0 = x0;
+                y1 = x1;
+                y2 = x2;
+                y3 = x3;
+                movable = false;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 == x1 && x1 != x2 && x2 != x3)
+            {
+                y0 = x0 + 1;
+                y1 = x2;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 != x1 && x1 == x2 && x2 != x3)
+            {
+                y0 = x0;
+                y1 = x1 + 1;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 == x1 && x1 == x2 && x2 != x3)
+            {
+                y0 = x0 + 1;
+                y1 = x2;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 != x1 && x1 != x2 && x2 == x3)
+            {
+                y0 = x0;
+                y1 = x1;
+                y2 = x2 + 1;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 == x1 && x1 != x2 && x2 == x3)
+            {
+                y0 = x0 + 1;
+                y1 = x2 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 != x1 && x1 == x2 && x2 == x3)
+            {
+                y0 = x0;
+                y1 = x1 + 1;
+                y2 = x3;
+                y3 = 0;
+                movable = true;
+            }
+            else if (x0 != 0 && x1 != 0 && x2 != 0 && x3 != 0 && x0 == x1 && x1 == x2 && x2 == x3)
+            {
+                y0 = x0 + 1;
+                y1 = x2 + 1;
+                y2 = 0;
+                y3 = 0;
+                movable = true;
+            }
+            return new Tuple<int[], bool>(new int[] { y0, y1, y2, y3 }, movable);
+        }
     }
 }
     
