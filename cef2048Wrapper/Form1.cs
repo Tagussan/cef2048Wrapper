@@ -114,7 +114,7 @@ namespace cef2048Wrapper
         {
             int[,] inboard = cellsStrToBoard(cells);
             int[,] merged;
-            merged = mergeBoard(inboard, Direction.left).Item1;
+            merged = mergeBoard(inboard, Direction.up).Item1;
             for (var i = 0; i < 4; i++)
             {
                 for(var j = 0; j < 4; j++)
@@ -204,13 +204,13 @@ namespace cef2048Wrapper
             {
                 rotated = hMirrorBoard(board);
             }
-            else if(dir == Direction.up)
+            else if(dir == Direction.down)
             {
                 rotated = transposeBoard(board);
             }
-            else if(dir == Direction.down)
+            else if(dir == Direction.up)
             {
-                rotated = transposeBoard(hMirrorBoard(board));
+                rotated = hMirrorBoard(transposeBoard(board));
             }
             return rotated;
         }
@@ -226,13 +226,13 @@ namespace cef2048Wrapper
             {
                 rotated = hMirrorBoard(board);
             }
-            else if(dir == Direction.up)
+            else if(dir == Direction.down)
             {
                 rotated = transposeBoard(board);
             }
-            else if(dir == Direction.down)
+            else if(dir == Direction.up)
             {
-                rotated = hMirrorBoard(transposeBoard(board));
+                rotated = transposeBoard(hMirrorBoard(board));
             }
             return rotated;
 
