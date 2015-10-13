@@ -114,7 +114,7 @@ namespace cef2048Wrapper
         {
             int[,] inboard = cellsStrToBoard(cells);
             int[,] merged;
-            merged = leftMergeBoard(inboard, Direction.left).Item1;
+            merged = mergeBoard(inboard, Direction.left).Item1;
             for (var i = 0; i < 4; i++)
             {
                 for(var j = 0; j < 4; j++)
@@ -127,31 +127,38 @@ namespace cef2048Wrapper
           
         }
 
-        private Tuple<int[,],bool> leftMergeBoard(int[,] board, Direction dir)
+        private Tuple<int[,], bool> mergeBoard(int[,] board, Direction dir)
         {
+            Tuple<int[,], bool> mergeAns;
             int[,] rotated = rotateBoard(board, dir);
+            mergeAns = leftMergeBoard(rotated);
+            return new Tuple<int[,], bool>(unrotateBoard(mergeAns.Item1, dir), mergeAns.Item2);
+        }
+
+        private Tuple<int[,],bool> leftMergeBoard(int[,] board)
+        {
             int[,] merged = new int[4, 4];
             bool movable = true;
             Tuple<int[], bool> mLine;
-            mLine = lineMerge(rotated[3,0], rotated[2,0], rotated[1,0], rotated[0,0]);
+            mLine = lineMerge(board[3,0], board[2,0], board[1,0], board[0,0]);
             movable = movable & mLine.Item2;
             for(var i = 0; i < 4; i++)
             {
                 merged[i, 0] = mLine.Item1[3-i];
             }
-            mLine = lineMerge(rotated[3,1], rotated[2,1], rotated[1,1], rotated[0,1]);
+            mLine = lineMerge(board[3,1], board[2,1], board[1,1], board[0,1]);
             movable = movable & mLine.Item2;
             for(var i = 0; i < 4; i++)
             {
                 merged[i, 1] = mLine.Item1[3-i];
             }
-            mLine = lineMerge(rotated[3,2], rotated[2,2], rotated[1,2], rotated[0,2]);
+            mLine = lineMerge(board[3,2], board[2,2], board[1,2], board[0,2]);
             movable = movable & mLine.Item2;
             for(var i = 0; i < 4; i++)
             {
                 merged[i, 2] = mLine.Item1[3-i];
             }
-            mLine = lineMerge(rotated[3,3], rotated[2,3], rotated[1,3], rotated[0,3]);
+            mLine = lineMerge(board[3,3], board[2,3], board[1,3], board[0,3]);
             movable = movable & mLine.Item2;
             for(var i = 0; i < 4; i++)
             {
